@@ -26,4 +26,3 @@ Usage of the main functions of the `PONI` class exemplified in `main/PONI.cpp`.
 
 One example of file correctly formatted to pass parameters is `parameters_PONI.dat`.
 The method `testParameters` of the `PONI` class prints current values of each parameter and shows the correct name to be used in the file.
-
