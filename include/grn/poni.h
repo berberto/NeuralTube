@@ -1,3 +1,13 @@
+/******************************************************************************
+ *
+ *  PONI.h
+ *  
+ *  Definition of the PONI network class (Cohen et al. '14).
+ *
+ *  Author: Alberto Pezzotta (alberto.pezzotta [AT] crick.ac.uk)
+ *
+ *****************************************************************************/
+
 #ifndef PONINET_H
 #define PONINET_H
 
@@ -96,8 +106,7 @@ private:
     PONI_x_t x;    // state variables
     PONI_h_t h;    // control/effector variables
 
-    PONI_x_t Z;    // partition function
-    PONI_x_t phi;  // probability of RNA-polimerase bound
+    PONI_x_t prodR;  // probability of RNA-polimerase bound
 
     PONI_x_t drift;
     PONI_x_t noise;
@@ -136,8 +145,6 @@ public:
     PONI_x_t getDrift();
 
     PONI_x_t getProdR ();
-
-    PONI_x_t getPartFunc ();
     
     void evolve (double dt, bool stoch);
 

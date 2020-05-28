@@ -1,3 +1,13 @@
+/******************************************************************************
+ *
+ *  PONI.cc
+ *  
+ *  Implementation of the PONI network class (Cohen et al. '14).
+ *
+ *  Author: Alberto Pezzotta (alberto.pezzotta [AT] crick.ac.uk)
+ *
+ *****************************************************************************/
+
 #define PONINET_CC
 
 #include <iostream>
@@ -128,6 +138,7 @@ void PONI::setParameters(const char* filename)
             exit(EXIT_FAILURE);
         }
     }
+    parf.close();
 
     // once the map has been updated according to the file,
     // update the values of the corresponding parameters
@@ -274,55 +285,87 @@ PONI_x_t PONI::getDrift ()
 
 void PONI::setProdR ()
 {
-    Z   << 0., 0., 0., 0.;
-    phi << 0., 0., 0., 0.;
+    prodR << 0., 0., 0., 0.;
 
-    double aux_1, aux_2, aux_3, aux_4, aux_5;
+    double aux_1, aux_2, aux_3, aux_4;
 
+    //
     // Pax
-    aux_1 = 1. + K_Oli_Pax * x(1); // 1 + K_Oli_Pax * [O]
-    aux_2 = 1. + K_Nkx_Pax * x(2); // 1 + K_Nkx_Pax * [N]
-    Z(0) = K_Pol_Pax * C_Pol \
-           + aux_1*aux_1 * aux_2*aux_2;
-    phi(0) = K_Pol_Pax * C_Pol / Z(0);
+    //
 
+    // Repression by Olig
+    aux_1 = 1./(1. + K_Oli_Pax * x(1));
+    aux_1 *= aux_1;
+
+    // Repression by Nkx
+    aux_2 = 1./(1. + K_Nkx_Pax * x(2));
+    aux_2 *= aux_2;
+    prodR(0) = alpha_Pax * Hill(K_Pol_Pax * C_Pol * aux_1 * aux_2);
+
+
+    //
     // Olig
-    aux_1 = 1. + K_Nkx_Oli * x(2);             // 1 + K_Nkx_Oli * [N]
-    aux_2 = 1. + K_Irx_Oli * x(3);             // 1 + K_Irx_Oli * [I]
-    aux_3 = 1. + f_A * K_Gli_Oli * h(0);       // 1 + c_AP * K_Gli_Oli * [A]
-    aux_4 = 1. + K_Gli_Oli * ( h(0) + h(1) );  // 1. + K_Gli_Oli * ([A] + [R])
-    Z(1) = K_Pol_Oli * C_Pol * aux_3 \
-           + aux_4 * aux_1*aux_1 * aux_2*aux_2;
-    phi(1) = K_Pol_Oli * C_Pol * aux_3 / Z(1);
+    //
 
+    // Activation by Gli
+    aux_1 = 1. + f_A * K_Gli_Oli * h(0);
+    aux_1 /= 1. + K_Gli_Oli * ( h(0) + h(1) );
+
+    // Repression by Nkx
+    aux_2 = 1./(1. + K_Nkx_Oli * x(2));
+    aux_2 *= aux_2;
+
+    // Repression by Irx
+    aux_3 = 1./(1. + K_Irx_Oli * x(3));
+    aux_3 *= aux_3;
+
+    prodR(1) = alpha_Oli * Hill(K_Pol_Oli * C_Pol * aux_1 * aux_2 * aux_3);
+
+
+    //
     // Nkx
-    aux_1 = 1. + K_Oli_Nkx * x(1);             // 1 + K_Oli_Nkx * [O]
-    aux_2 = 1. + K_Irx_Nkx * x(3);             // 1 + K_Irx_Nkx * [I]
-    aux_3 = 1. + K_Pax_Nkx * x(0);             // 1 + K_Pax_Nkx * [P]
-    aux_4 = 1. + f_A * K_Gli_Nkx * h(0);       // 1 + c_AP * K_Gli_Nkx * ([A] + [R])
-    aux_5 = 1. + K_Gli_Nkx * ( h(0) + h(1) );  // 1 + K_Gli_Nkx * ([A] + [R])
-    Z(2) = K_Pol_Nkx * C_Pol * aux_4 \
-           + aux_5 * aux_1*aux_1 * aux_2*aux_2 * aux_3*aux_3;
-    phi(2) = K_Pol_Nkx * C_Pol * aux_4 / Z(2);
+    //
 
+    // Activation by Gli
+    aux_1 = 1. + f_A * K_Gli_Nkx * h(0);
+    aux_1 /= 1. + K_Gli_Nkx * ( h(0) + h(1) );
+
+    // Repression by Pax
+    aux_2 = 1./(1. + K_Pax_Nkx * x(0));
+    aux_2 *= aux_2;
+
+    // Repression by Olig
+    aux_3 = 1./(1. + K_Oli_Nkx * x(1));
+    aux_3 *= aux_3;
+
+    // Repression by Irx
+    aux_4 = 1./(1. + K_Irx_Nkx * x(3));
+    aux_4 *= aux_4;
+
+    prodR(2) = alpha_Nkx * Hill(K_Pol_Nkx * C_Pol * aux_1 * aux_2 * aux_3 * aux_4);
+
+
+    //
     // Irx
-    aux_1 = 1. + K_Oli_Irx * x(1); // 1 + K_Oli_Pax * [O]
-    aux_2 = 1. + K_Nkx_Irx * x(2); // 1 + K_Nkx_Pax * [N]
-    Z(3) = K_Pol_Irx * C_Pol \
-           + aux_1*aux_1 * aux_2*aux_2;
-    phi(3) = K_Pol_Irx * C_Pol / Z(3);
+    //
+
+    // Repression by Olig
+    aux_1 = 1./(1. + K_Oli_Irx * x(1));
+    aux_1 *= aux_1;
+
+    // Repression by Nkx
+    aux_2 = 1./(1. + K_Nkx_Irx * x(2));
+    aux_2 *= aux_2;
+
+    prodR(3) = alpha_Irx * Hill(K_Pol_Irx * C_Pol * aux_1 * aux_2);
 
 }
 
-
-PONI_x_t PONI::getPartFunc()
-{
-    return Z;
-}
 
 PONI_x_t PONI::getProdR()
 {
-    return phi;
+    setProdR();
+    return prodR;
 }
 
 
@@ -330,10 +373,10 @@ PONI_x_t PONI::getProdR()
 void PONI::setDrift ()
 {
     setProdR();
-    drift(0) = alpha_Pax * phi(0) - delta * x(0);
-    drift(1) = alpha_Oli * phi(1) - delta * x(1);
-    drift(2) = alpha_Nkx * phi(2) - delta * x(2);
-    drift(3) = alpha_Irx * phi(3) - delta * x(3);
+    drift(0) = prodR(0) - delta * x(0);
+    drift(1) = prodR(1) - delta * x(1);
+    drift(2) = prodR(2) - delta * x(2);
+    drift(3) = prodR(3) - delta * x(3);
 }
 
 // noise vector
@@ -341,10 +384,10 @@ void PONI::setNoise ()
 {    
     double g[4];
     gauss_dble(g,4);
-    noise(0) = sqrt(alpha_Pax * phi(0) + delta * x(0))*g[0];
-    noise(1) = sqrt(alpha_Oli * phi(1) + delta * x(1))*g[1];
-    noise(2) = sqrt(alpha_Nkx * phi(2) + delta * x(2))*g[2];
-    noise(3) = sqrt(alpha_Irx * phi(3) + delta * x(3))*g[3];
+    noise(0) = sqrt(prodR(0) + delta * x(0))*g[0];
+    noise(1) = sqrt(prodR(1) + delta * x(1))*g[1];
+    noise(2) = sqrt(prodR(2) + delta * x(2))*g[2];
+    noise(3) = sqrt(prodR(3) + delta * x(3))*g[3];
 }
 
 

@@ -1,13 +1,26 @@
+/******************************************************************************
+ *
+ *	PONI
+ *	
+ *	Simulating the evolution of a PONI network (Cohen et al. '14).
+ *
+ *	Gives as output the time evolution of protein levels.
+ *
+ *	Author: Alberto Pezzotta (alberto.pezzotta [AT] crick.ac.uk)
+ *
+ *****************************************************************************/
+
 #define MAIN_PROGRAM
 
 #include <iostream>
 #include <cmath>
 #include <cstdlib>
-// #include <Eigen/Dense>
 #include "random.h"
 #include "grn/poni.h"
 
 using namespace Eigen;
+using namespace std;
+
 
 int main (int argc, char *argv[])
 {
@@ -41,12 +54,12 @@ int main (int argc, char *argv[])
 
 	// use first command line argument as filename with parameters
 	// if none is passed, the default are used
-	if (argc < 2) grn.setParameters("parameters_PONI.dat");
-	else grn.setParameters(argv[1]);
+	// (the file may contain only a subset of the parameters, others are set to default)
+	if (argc == 2) grn.setParameters(argv[1]);
 
 	// possible to set parameters individually by name
 	// e.g. parameter for strength of the noise (system size)
-	grn.setParameters("Omega", 100.);
+	grn.setParameters("Omega", 500.);
 	
 
 	//
@@ -88,7 +101,7 @@ int main (int argc, char *argv[])
 	gliVec <<	1.,		// GliA
 				0.;		// GliR
 	grn.setEffector(gliVec);
-	for (double t = 0.; t < 200.; t += dt) {
+	for (double t = 0.; t < 100.; t += dt) {
 
 		// evolve by a step dt (Euler integration)
 		// set second variable to 'true' to add noise

@@ -20,7 +20,7 @@ all: rmxeq mkdep cmpsc mkxeq # rmpmk
 # main programs and required modules
 #
 
-MAIN = PONI
+MAIN = PONI  PONIpattern
 
 # modules and C++ classes
 
